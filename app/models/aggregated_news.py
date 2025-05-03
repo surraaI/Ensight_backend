@@ -12,6 +12,12 @@ class AggregatedNewsSummary(Base):
     summary = Column(Text, nullable=False)
     source = Column(String, nullable=False)
     url = Column(String, nullable=False)
+    thumbnail_url = Column(String, nullable=True)  # <-- NEW
     status = Column(Enum("draft", "published", name="agg_news_status"), default="draft")
+    
+    written_by = Column(String, ForeignKey("users.id"))
+    edited_by = Column(String, ForeignKey("users.id"))
+    approved_by = Column(String, ForeignKey("users.id"))
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
