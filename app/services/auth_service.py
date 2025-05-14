@@ -1,8 +1,10 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from datetime import timedelta
 from app.models.user import User, Role
 from app.schemas.user import UserCreate, UserLogin
 from app.core.security import hash_password, verify_password
+from app.core.security import create_access_token
 import uuid
 
 
@@ -23,14 +25,22 @@ def signup_user(user: UserCreate, db: Session):
     db.refresh(new_user)
     return new_user
 
-
 def login_user(credentials: UserLogin, db: Session):
     user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    access_token = create_access_token(
+        data={"sub": user.id, "role": user.role},
+        expires_delta=timedelta(minutes=30)
+    )
+
     return {
-        "message": "Login successful",
-        "user_id": user.id,
-        "role": user.role
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role
+        }
     }
