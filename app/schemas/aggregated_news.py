@@ -33,9 +33,11 @@ class AggregatedNewsOut(AggregatedNewsBase):
     written_by: Optional[str]
     edited_by: Optional[str]
     approved_by: Optional[str]
+    category: Optional[CategoryOut] = None
+    subcategory: Optional[SubcategoryOut] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     published_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True  # Pydantic v2 fix
+        from_attributes = True

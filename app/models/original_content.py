@@ -18,6 +18,9 @@ class OriginalContent(Base):
     is_premium = Column(Boolean, default=False)
     image_url = Column(String, nullable=True)
 
+    category_id = Column(String, ForeignKey("categories.id"), nullable=True)
+    subcategory_id = Column(String, ForeignKey("subcategories.id"), nullable=True)
+
     status = Column(SqlEnum(ContentStatus, name="original_content_status"), default=ContentStatus.DRAFT)
 
     written_by_id = Column(String, ForeignKey("users.id"))
@@ -27,3 +30,8 @@ class OriginalContent(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=None, onupdate=datetime.utcnow)
     published_at = Column(DateTime, default=None)
+
+    # Optional: add relationships if needed
+    written_by = relationship("User", foreign_keys=[written_by_id])
+    edited_by = relationship("User", foreign_keys=[edited_by_id])
+    approved_by = relationship("User", foreign_keys=[approved_by_id])
