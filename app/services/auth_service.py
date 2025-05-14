@@ -1,8 +1,6 @@
-# app/services/auth_service.py
-
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from app.models.user import User
+from app.models.user import User, Role
 from app.schemas.user import UserCreate, UserLogin
 from app.core.security import hash_password, verify_password
 import uuid
@@ -17,7 +15,7 @@ def signup_user(user: UserCreate, db: Session):
         id=str(uuid.uuid4()),
         email=user.email,
         hashed_password=hash_password(user.password),
-        role="PREMIUM" if user.is_premium else "FREE",
+        role=Role.FREE_USER,  
         is_active=True
     )
     db.add(new_user)

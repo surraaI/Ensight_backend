@@ -12,7 +12,6 @@ class UserRole(str, Enum):
 
 class UserBase(BaseModel):
     email: EmailStr
-    role: UserRole
 
 
 class UserCreate(UserBase):
@@ -27,6 +26,7 @@ class UserLogin(BaseModel):
 class UserOut(UserBase):
     id: str
     is_active: bool
+    role: UserRole
 
     class Config:
-        from_attributes = True  # ✅ for Pydantic v2 (replaces orm_mode)
+        from_attributes = True  # Pydantic v2 fix
