@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from enum import Enum
 
+
 class UserRole(str, Enum):
     admin = "admin"
     editor = "editor"
@@ -8,16 +9,24 @@ class UserRole(str, Enum):
     subscriber = "subscriber"
     free_user = "free_user"
 
+
 class UserBase(BaseModel):
     email: EmailStr
     role: UserRole
 
+
 class UserCreate(UserBase):
     password: str  # raw password to be hashed
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
 
 class UserOut(UserBase):
     id: str
     is_active: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # ✅ for Pydantic v2 (replaces orm_mode)
