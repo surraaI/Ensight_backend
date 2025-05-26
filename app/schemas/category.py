@@ -1,6 +1,8 @@
 # app/schemas/category.py
 
 from pydantic import BaseModel
+from typing import Optional
+
 
 class CategoryBase(BaseModel):
     name: str

@@ -1,5 +1,4 @@
 # seed_superadmin.py
-
 import os
 import sys
 from passlib.context import CryptContext
@@ -22,7 +21,7 @@ def create_superadmin(email: str, password: str):
     superadmin = User(
         email=email,
         hashed_password=hashed_password,
-        role='admin',
+        role='superadmin',
         is_active=True
     )
 
@@ -38,6 +37,6 @@ def create_superadmin(email: str, password: str):
 
 if __name__ == "__main__":
     # Replace with real values or prompt for input
-    email = "suraitana@gmail.com"
+    email = "superadmin@gmail.com"
     password = "12345678"
     create_superadmin(email, password)

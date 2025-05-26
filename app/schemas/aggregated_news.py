@@ -1,6 +1,7 @@
 from pydantic import BaseModel, HttpUrl
 from datetime import datetime
 from typing import Optional
+from .category import CategoryOut, SubcategoryOut 
 
 
 class AggregatedNewsBase(BaseModel):

@@ -4,6 +4,7 @@ import enum
 import uuid
 
 class Role(str, enum.Enum):
+    SUPERADMIN = "superadmin"
     ADMIN = "admin"
     EDITOR = "editor"
     WRITER = "writer"
