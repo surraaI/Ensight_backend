@@ -3,12 +3,12 @@ from enum import Enum
 
 
 class UserRole(str, Enum):
-    superadmin = "superadmin"
-    admin = "admin"
-    editor = "editor"
-    writer = "writer"
-    subscriber = "subscriber"
-    free_user = "free_user"
+    SUPERADMIN = "SUPERADMIN"
+    ADMIN = "ADMIN"
+    EDITOR = "EDITOR"
+    WRITER = "WRITER"
+    SUBSCRIBER = "SUBSCRIBER"
+    FREE_USER = "FREE_USER"
 
 
 class UserBase(BaseModel):

@@ -39,9 +39,25 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations with live DB connection."""
-    engine = create_engine(DATABASE_URL, poolclass=pool.NullPool)
+    # Modified connection setup for remote PostgreSQL
+    engine = create_engine(
+        DATABASE_URL,
+        poolclass=pool.NullPool,
+        connect_args={
+            "sslmode": "require",  # Enforce SSL
+            "keepalives": 1,       # Maintain connection
+            "keepalives_idle": 30, # TCP keepalive settings
+            "keepalives_interval": 10,
+            "keepalives_count": 5
+        }
+    )
+    
     with engine.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, 
+            target_metadata=target_metadata,
+            compare_type=True  # Enable for enum changes
+        )
         with context.begin_transaction():
             context.run_migrations()
 

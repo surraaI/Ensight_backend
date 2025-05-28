@@ -4,12 +4,12 @@ import enum
 import uuid
 
 class Role(str, enum.Enum):
-    SUPERADMIN = "superadmin"
-    ADMIN = "admin"
-    EDITOR = "editor"
-    WRITER = "writer"
-    SUBSCRIBER = "subscriber"
-    FREE_USER = "free_user"
+    SUPERADMIN = "SUPERADMIN"
+    ADMIN = "ADMIN"
+    EDITOR = "EDITOR"
+    WRITER = "WRITER"
+    SUBSCRIBER = "SUBSCRIBER"
+    FREE_USER = "FREE_USER"
 
 class User(Base):
     __tablename__ = "users"
@@ -18,3 +18,5 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     role = Column(Enum(Role), default=Role.FREE_USER)
+
+    __table_args__ = {'extend_existing': True}
