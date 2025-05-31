@@ -41,6 +41,22 @@ def login_user(credentials: UserLogin, db: Session):
         "user": {
             "id": user.id,
             "email": user.email,
-            "role": user.role
+            "role": user.role,
+            "requires_password_reset": user.requires_password_reset 
         }
     }
+    
+def reset_password(db: Session, user: User, current_password: str, new_password: str):
+    # Verify current password
+    if not verify_password(current_password, user.hashed_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect current password"
+        )
+    
+    # Update password
+    user.hashed_password = hash_password(new_password)
+    user.requires_password_reset = False
+    db.commit()
+    db.refresh(user)
+    return user
