@@ -1,6 +1,11 @@
-from pydantic import BaseModel, UUID4, HttpUrl
+from pydantic import BaseModel, HttpUrl
 from typing import Optional, List
-from datetime import datetime
+from enum import Enum
+
+class ArticleStatus(str, Enum):
+    DRAFT = "DRAFT"
+    REVIEW = "REVIEW"
+    PUBLISHED = "PUBLISHED"
 
 class ArticleBase(BaseModel):
     slug: str
@@ -15,6 +20,7 @@ class ArticleBase(BaseModel):
     content: str
     description: str
     is_premium: bool = False
+    status: ArticleStatus = ArticleStatus.DRAFT
     caption: Optional[str] = None
     quote: Optional[str] = None
     quote_author: Optional[str] = None
@@ -24,22 +30,26 @@ class ArticleBase(BaseModel):
 class ArticleCreate(ArticleBase):
     pass
 
+class ArticleUpdate(BaseModel):
+    slug: Optional[str] = None
+    title: Optional[str] = None
+    category: Optional[str] = None
+    subcategory: Optional[str] = None
+    date: Optional[str] = None
+    read_time: Optional[str] = None
+    image: Optional[str] = None
+    href: Optional[str] = None
+    content: Optional[str] = None
+    description: Optional[str] = None
+    is_premium: Optional[bool] = None
+    status: Optional[ArticleStatus] = None
+    caption: Optional[str] = None
+    quote: Optional[str] = None
+    quote_author: Optional[str] = None
+    tag: Optional[str] = None
+
 class Article(ArticleBase):
     id: str
-
-    class Config:
-        orm_mode = True
-
-class ReadingHistoryEntryBase(BaseModel):
-    article_id: str
-    progress: int
-
-class ReadingHistoryEntryCreate(ReadingHistoryEntryBase):
-    pass
-
-class ReadingHistoryEntry(ReadingHistoryEntryBase):
-    id: str
-    article: Article
 
     class Config:
         orm_mode = True

@@ -1,8 +1,14 @@
-from sqlalchemy import Column, String, Boolean, Integer, ForeignKey
+from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
+import enum
 import uuid
+
+class ArticleStatus(str, enum.Enum):
+    DRAFT = "DRAFT"
+    REVIEW = "REVIEW"
+    PUBLISHED = "PUBLISHED"
 
 class Article(Base):
     __tablename__ = "articles"
@@ -19,6 +25,7 @@ class Article(Base):
     content = Column(String, nullable=False)
     description = Column(String, nullable=False)
     is_premium = Column(Boolean, default=False)
+    status = Column(Enum(ArticleStatus), default=ArticleStatus.DRAFT, nullable=False)
     caption = Column(String)
     quote = Column(String)
     quote_author = Column(String)
