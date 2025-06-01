@@ -8,3 +8,5 @@ psycopg2-binary
 python-jose[cryptography]
 email-validator
 celery
+pydantic-settings>=2.0.0
+
