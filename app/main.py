@@ -6,6 +6,7 @@ from app.routers import auth
 from app.routers import aggregated_news
 from app.routers import original_content
 from app.routers import superadmin
+from app.models import User, Profile
 
 app = FastAPI(
     title="Ensight API",
