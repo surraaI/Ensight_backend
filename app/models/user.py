@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Enum, Boolean
+from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
 import uuid
@@ -18,6 +19,9 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     role = Column(Enum(Role), default=Role.FREE_USER)
-    requires_password_reset = Column(Boolean, default=False) 
+    requires_password_reset = Column(Boolean, default=False)
+
+    profile = relationship("Profile", uselist=False, back_populates="user")
+    articles = relationship("Article", back_populates="author_user")
 
     __table_args__ = {'extend_existing': True}
