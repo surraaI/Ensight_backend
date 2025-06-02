@@ -5,7 +5,7 @@ from app.services.profile_service import get_profile, update_profile, delete_pro
 from app.schemas.profile import Profile, ProfileUpdate
 from app.dependencies import get_current_user
 
-router = APIRouter()
+router = APIRouter(prefix="/Profile", tags=["Profiles"])
 
 @router.get("/{user_id}", response_model=Profile)
 def read_profile(
