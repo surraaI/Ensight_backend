@@ -7,6 +7,8 @@ from app.routers import aggregated_news
 from app.routers import original_content
 from app.routers import superadmin
 from app.models import User, Profile
+from app.routers import article 
+from app.routers import profile
 
 app = FastAPI(
     title="Ensight API",
@@ -34,6 +36,9 @@ app.include_router(auth.router)
 app.include_router(aggregated_news.router)
 app.include_router(original_content.router)
 app.include_router(superadmin.router) 
+app.include_router(article.router) 
+app.include_router(profile.router)
+
 
 @app.get("/")
 def root():

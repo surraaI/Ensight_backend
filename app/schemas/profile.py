@@ -1,8 +1,13 @@
-from pydantic import BaseModel, EmailStr, UUID4
+from pydantic import EmailStr
 from typing import Optional, List
-from .article import Article, ReadingHistoryEntry
+from .common import CamelModel
+from .article import Article
 
-class ProfileBase(BaseModel):
+class ReadingHistoryEntry(CamelModel):
+    article: Article
+    progress: int
+
+class ProfileBase(CamelModel):
     first_name: str
     last_name: str
     email: EmailStr
@@ -16,7 +21,7 @@ class ProfileBase(BaseModel):
 class ProfileCreate(ProfileBase):
     pass
 
-class ProfileUpdate(BaseModel):
+class ProfileUpdate(CamelModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     email: Optional[EmailStr] = None
@@ -25,12 +30,8 @@ class ProfileUpdate(BaseModel):
     track_reading_progress: Optional[bool] = None
     content_update_notifications: Optional[bool] = None
     topics: Optional[List[str]] = None
-    saved_articles: Optional[List[str]] = None
 
 class Profile(ProfileBase):
     id: str
     saved_articles: List[Article] = []
     reading_history: List[ReadingHistoryEntry] = []
-
-    class Config:
-        orm_mode = True

@@ -1,13 +1,14 @@
 from pydantic import BaseModel, HttpUrl
 from typing import Optional, List
 from enum import Enum
+from .common import CamelModel
 
 class ArticleStatus(str, Enum):
     DRAFT = "DRAFT"
     REVIEW = "REVIEW"
     PUBLISHED = "PUBLISHED"
 
-class ArticleBase(BaseModel):
+class ArticleBase(CamelModel):
     slug: str
     title: str
     category: str
@@ -30,7 +31,7 @@ class ArticleBase(BaseModel):
 class ArticleCreate(ArticleBase):
     pass
 
-class ArticleUpdate(BaseModel):
+class ArticleUpdate(CamelModel):
     slug: Optional[str] = None
     title: Optional[str] = None
     category: Optional[str] = None
@@ -50,6 +51,3 @@ class ArticleUpdate(BaseModel):
 
 class Article(ArticleBase):
     id: str
-
-    class Config:
-        orm_mode = True
