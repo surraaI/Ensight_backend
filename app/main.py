@@ -9,6 +9,8 @@ from app.routers import superadmin
 from app.models import User, Profile
 from app.routers import article 
 from app.routers import profile
+from app.routers import resource
+
 
 app = FastAPI(
     title="Ensight API",
@@ -38,6 +40,7 @@ app.include_router(original_content.router)
 app.include_router(superadmin.router) 
 app.include_router(article.router) 
 app.include_router(profile.router)
+app.include_router(resource.router)
 
 
 @app.get("/")

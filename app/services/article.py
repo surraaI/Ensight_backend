@@ -39,7 +39,7 @@ class ArticleService:
 
     @staticmethod
     def get_article_by_slug(db: Session, category: str, subcategory: str, slug: str):
-        return db.execute(
+        article =  db.execute(
             select(Article).filter_by(
                 category=category, 
                 subcategory=subcategory, 
@@ -47,6 +47,8 @@ class ArticleService:
                 status=ArticleStatus.PUBLISHED
             )
         ).scalar_one_or_none()
+        print(f"Retrieved article: {article}")
+        return article
 
     @staticmethod
     def get_article_by_id(db: Session, article_id: str):

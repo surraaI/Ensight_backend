@@ -1,5 +1,6 @@
-from pydantic import BaseModel, UUID4
-from typing import List
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import List, Union
 from .article import Article
 from .report import Report
 from .data_insight import DataInsight
@@ -25,3 +26,45 @@ class Resources(ResourcesBase):
 
     class Config:
         orm_mode = True
+
+class ReportBase(BaseModel):
+    id: str
+    title: str
+    description: str
+    image: str
+    published: str  # ISO 8601 string
+    buttonText: str = Field(..., alias="button_text")
+    buttonLink: str = Field(..., alias="button_link")
+    slug: str
+
+    class Config:
+        allow_population_by_field_name = True
+
+class DataInsightBase(BaseModel):
+    id: str
+    title: str
+    description: str
+    icon: str
+    updated: str  # ISO 8601 string
+    buttonText: str = Field(..., alias="button_text")
+    buttonLink: str = Field(..., alias="button_link")
+    slug: str
+
+    class Config:
+        allow_population_by_field_name = True
+
+class EventBase(BaseModel):
+    id: str
+    date: str
+    title: str
+    buttonText: str = Field(..., alias="button_text")
+    buttonLink: str = Field(..., alias="button_link")
+    slug: str
+
+    class Config:
+        allow_population_by_field_name = True
+
+# Union types for responses
+ResourceType = Union[ReportBase, DataInsightBase, EventBase]
+GetResourcesByTypeResponse = List[ResourceType]
+GetResourceBySlugResponse = ResourceType
