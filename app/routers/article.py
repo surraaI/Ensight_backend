@@ -6,6 +6,7 @@ from app.services.article import ArticleService
 from app.schemas.article import Article, ArticleCreate, ArticleUpdate
 from app.models.user import User, Role
 from app.dependencies import get_current_user
+from fastapi import Query
 
 router = APIRouter(prefix="/article", tags=["articles"])
 
@@ -92,3 +93,35 @@ async def approve_article(
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     return article
+
+@router.get("/articles", response_model=List[Article])
+async def get_latest_articles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    articles = ArticleService.get_latest_articles(db)
+    if not articles:
+        raise HTTPException(status_code=404, detail="No articles found")
+    return articles
+
+@router.get("/articles/popular", response_model=List[Article])
+async def get_popular_articles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(10, description="Number of articles to return", gt=0, le=50)
+):
+    articles = ArticleService.get_popular_articles(db, limit)
+    if not articles:
+        raise HTTPException(status_code=404, detail="No popular articles found")
+    return articles
+
+@router.get("/articles/popular/week", response_model=List[Article])
+async def get_popular_articles_last_week(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(10, description="Number of articles to return", gt=0, le=50)
+):
+    articles = ArticleService.get_popular_articles_last_week(db, limit)
+    if not articles:
+        raise HTTPException(status_code=404, detail="No popular articles found in the last week")
+    return articles

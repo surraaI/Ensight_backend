@@ -58,3 +58,36 @@ class ArticleService:
         db.commit()
         db.refresh(article)
         return article
+    
+    @staticmethod
+    def get_latest_articles(db: Session):
+        return db.execute(
+            select(Article)
+            .filter_by(status=ArticleStatus.PUBLISHED)
+            .order_by(Article.date.desc())  # Newest first
+        ).scalars().all()
+        
+    @staticmethod
+    def get_popular_articles(db: Session, limit: int = 10):
+        return db.execute(
+            select(Article)
+            .filter_by(status=ArticleStatus.PUBLISHED)
+            .order_by(Article.no_of_readers.desc())
+            .limit(limit)
+        ).scalars().all()
+
+    @staticmethod
+    def get_popular_articles_last_week(db: Session, limit: int = 10):
+        # Calculate date 7 days ago
+        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        one_week_ago_str = one_week_ago.date().isoformat()
+        
+        return db.execute(
+            select(Article)
+            .filter(
+                Article.status == ArticleStatus.PUBLISHED,
+                Article.date >= one_week_ago_str
+            )
+            .order_by(Article.no_of_readers.desc())
+            .limit(limit)
+        ).scalars().all()
