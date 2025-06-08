@@ -14,7 +14,7 @@ def read_profile(
     db: Session = Depends(get_db)
 ):
     # Ensure users can only access their own profile
-    if current_user["id"] != user_id:
+    if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to access this profile")
     
     profile = get_profile(db, user_id)
@@ -29,7 +29,7 @@ def update_user_profile(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if current_user["id"] != user_id:
+    if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to update this profile")
     
     profile = update_profile(db, user_id, profile_data)
@@ -43,7 +43,7 @@ def delete_user_profile(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if current_user["id"] != user_id:
+    if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this profile")
     
     if not delete_profile(db, user_id):
