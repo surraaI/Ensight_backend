@@ -10,6 +10,7 @@ from app.models import User, Profile
 from app.routers import article 
 from app.routers import profile
 from app.routers import resource
+from app.routers import subscription 
 
 
 app = FastAPI(
@@ -41,6 +42,7 @@ app.include_router(superadmin.router)
 app.include_router(article.router) 
 app.include_router(profile.router)
 app.include_router(resource.router)
+app.include_router(subscription.router)
 
 
 @app.get("/")
