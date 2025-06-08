@@ -48,8 +48,6 @@ async def get_popular_articles_last_week(
 ):
     """Get popular articles from last week"""
     articles = ArticleService.get_popular_articles_last_week(db, limit)
-    if not articles:
-        raise HTTPException(status_code=404, detail="No popular articles found in the last week")
     return articles
 
 # ===== Parameterized Path Endpoints =====

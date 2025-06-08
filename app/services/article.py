@@ -106,16 +106,15 @@ class ArticleService:
 
     @staticmethod
     def get_popular_articles_last_week(db: Session, limit: int = 10):
-        # Calculate date 7 days ago
+        # Calculate datetime 7 days ago (preserve time component)
         one_week_ago = datetime.utcnow() - timedelta(days=7)
-        one_week_ago_str = one_week_ago.date().isoformat()
         
         return db.execute(
             select(Article)
             .options(load_only(*ArticleService.PREVIEW_COLUMNS))
             .filter(
                 Article.status == ArticleStatus.PUBLISHED,
-                Article.date >= one_week_ago_str
+                Article.date >= one_week_ago.isoformat()  
             )
             .order_by(Article.no_of_readers.desc())
             .limit(limit)
