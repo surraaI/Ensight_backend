@@ -7,7 +7,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # import from .env
 SECRET_KEY =   os.getenv("SECRET_KEY", "your_default_secret_key")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()

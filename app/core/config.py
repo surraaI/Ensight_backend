@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     # JWT Configuration
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 3000
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    JWT_REFRESH_SECRET_KEY: str = "your-refresh-secret-key"
+    JWT_REFRESH_SECRET_KEY: str = os.getenv("JWT_REFRESH_SECRET_KEY", "your-refresh-secret-key")
     
     # Authentication
     TOKEN_HEADER: str = "Authorization"  # Added this

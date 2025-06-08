@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 from typing import Optional, List
 from enum import Enum
 from .common import CamelModel
@@ -49,5 +49,25 @@ class ArticleUpdate(CamelModel):
     quote_author: Optional[str] = None
     tag: Optional[str] = None
 
-class Article(ArticleBase):
+class ArticlePreview(CamelModel):
     id: str
+    slug: str
+    title: str
+    category: str
+    subcategory: Optional[str] = None
+    date: str
+    read_time: str
+    image: str
+    description: str
+    is_premium: bool = False
+    no_of_readers: int = 0
+
+class Article(ArticlePreview):
+    author: str
+    href: str
+    content: str
+    caption: Optional[str] = None
+    quote: Optional[str] = None
+    quote_author: Optional[str] = None
+    tag: Optional[str] = None
+    status: ArticleStatus
