@@ -5,23 +5,13 @@ from app.database import get_db
 from app.services.article import ArticleService
 from app.schemas.article import Article, ArticlePreview, ArticleCreate, ArticleUpdate
 from app.models.user import User, Role
-from app.dependencies import get_current_user, get_optional_user
+from app.dependencies import get_current_user, get_optional_user, require_role
 from fastapi import Query
+from app.services.subscription import SubscriptionService
 
 router = APIRouter(prefix="/article", tags=["articles"])
 
-# Custom dependency for role-based access
-def require_role(roles: List[Role]):
-    def role_checker(current_user: User = Depends(get_current_user)):
-        if current_user.role not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
-            )
-        return current_user
-    return role_checker
-
-# ===== Fixed Path Endpoints (Must come first) =====
+# ===== Fixed Path Endpoints =====
 @router.get("/articles", response_model=List[ArticlePreview])
 async def get_latest_articles(db: Session = Depends(get_db)):
     """Get latest published articles"""
@@ -48,7 +38,7 @@ async def get_popular_articles_last_week(
 ):
     """Get popular articles from last week"""
     articles = ArticleService.get_popular_articles_last_week(db, limit)
-    return articles
+    return articles or []
 
 # ===== Parameterized Path Endpoints =====
 @router.get("/{category}", response_model=List[ArticlePreview])
@@ -95,6 +85,16 @@ async def get_article_by_slug(
                 detail="Authentication required for premium content"
             )
         
+        # Allow admin/editor roles to bypass subscription
+        if current_user.role not in [Role.ADMIN, Role.EDITOR, Role.SUPERADMIN]:
+            # Check subscription status
+            subscription = SubscriptionService.get_user_subscription_status(db, current_user.id)
+            if not subscription.get("is_active", False):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Active subscription required for premium content"
+                )
+    
     return article
 
 # ===== Protected Endpoints =====
@@ -121,8 +121,14 @@ async def update_article(
     article = ArticleService.get_article_by_id(db, id)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
+    
+    # Authorization check
     if article.author != current_user.id and current_user.role not in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(status_code=403, detail="Not authorized to edit this article")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to edit this article"
+        )
+    
     updated_article = ArticleService.update_article(db, id, article_update)
     return updated_article
 

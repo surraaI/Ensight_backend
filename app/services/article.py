@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session, load_only
-from sqlalchemy.orm import Session
+from sqlalchemy import select, update, func
 from app.models.article import Article, ArticleStatus
 from app.schemas.article import ArticleCreate, ArticleUpdate
-from sqlalchemy import select, update
 from datetime import datetime, timedelta
+import slugify
 
 class ArticleService:
     # Common columns for previews
@@ -13,12 +13,17 @@ class ArticleService:
         Article.title,
         Article.category,
         Article.subcategory,
+        Article.author,
+        Article.status,
+        Article.content,
         Article.date,
         Article.read_time,
+        Article.no_of_readers,
         Article.image,
         Article.description,
         Article.is_premium,
-        Article.no_of_readers
+        Article.no_of_readers,
+        Article.href  # Added href field
     ]
 
     @staticmethod
@@ -26,7 +31,10 @@ class ArticleService:
         return db.execute(
             select(Article)
             .options(load_only(*ArticleService.PREVIEW_COLUMNS))
-            .filter_by(category=category, status=ArticleStatus.PUBLISHED)
+            .filter(
+                func.lower(Article.category) == category.lower(),
+                Article.status == ArticleStatus.PUBLISHED
+            )
         ).scalars().all()
 
     @staticmethod
@@ -34,21 +42,23 @@ class ArticleService:
         return db.execute(
             select(Article)
             .options(load_only(*ArticleService.PREVIEW_COLUMNS))
-            .filter_by(category=category, subcategory=subcategory, status=ArticleStatus.PUBLISHED)
+            .filter(
+                func.lower(Article.category) == category.lower(),
+                func.lower(Article.subcategory) == subcategory.lower(),
+                Article.status == ArticleStatus.PUBLISHED
+            )
         ).scalars().all()
 
     @staticmethod
     def get_article_by_slug(db: Session, category: str, subcategory: str, slug: str):
-        article =  db.execute(
-            select(Article).filter_by(
-                category=category, 
-                subcategory=subcategory, 
-                slug=slug, 
-                status=ArticleStatus.PUBLISHED
+        return db.execute(
+            select(Article).filter(
+                func.lower(Article.category) == category.lower(),
+                func.lower(Article.subcategory) == subcategory.lower(),
+                Article.slug == slug,
+                Article.status == ArticleStatus.PUBLISHED
             )
         ).scalar_one_or_none()
-        print(f"Retrieved article: {article}")
-        return article
 
     @staticmethod
     def get_article_by_id(db: Session, article_id: str):
@@ -56,6 +66,22 @@ class ArticleService:
 
     @staticmethod
     def create_article(db: Session, article_data: dict):
+        # Generate slug from title if not provided
+        if 'title' in article_data and 'slug' not in article_data:
+            article_data['slug'] = slugify.slugify(article_data['title'])
+        
+        # Ensure category/subcategory are lowercase
+        if 'category' in article_data:
+            article_data['category'] = article_data['category'].lower()
+        if 'subcategory' in article_data:
+            article_data['subcategory'] = article_data['subcategory'].lower()
+        
+        # Generate href from slug
+        if 'slug' in article_data and 'href' not in article_data:
+            article_data['href'] = f"/{article_data.get('category', '')}/" \
+                                   f"{article_data.get('subcategory', '')}/" \
+                                   f"{article_data['slug']}"
+        
         db_article = Article(**article_data)
         db.add(db_article)
         db.commit()
@@ -64,10 +90,28 @@ class ArticleService:
 
     @staticmethod
     def update_article(db: Session, article_id: str, article_update: ArticleUpdate):
-        article = db.execute(select(Article).filter_by(id=article_id)).scalar_one_or_none()
+        article = ArticleService.get_article_by_id(db, article_id)
         if not article:
             return None
+        
         update_data = article_update.dict(exclude_unset=True)
+        
+        # Handle slug generation if title is updated
+        if 'title' in update_data and 'slug' not in update_data:
+            update_data['slug'] = slugify.slugify(update_data['title'])
+        
+        # Handle category/subcategory lowercase conversion
+        for field in ['category', 'subcategory']:
+            if field in update_data:
+                update_data[field] = update_data[field].lower()
+        
+        # Regenerate href if slug or categories change
+        if any(field in update_data for field in ['slug', 'category', 'subcategory']):
+            category = update_data.get('category', article.category)
+            subcategory = update_data.get('subcategory', article.subcategory)
+            slug = update_data.get('slug', article.slug)
+            update_data['href'] = f"/{category}/{subcategory}/{slug}"
+        
         db.execute(
             update(Article).where(Article.id == article_id).values(**update_data)
         )
@@ -77,7 +121,7 @@ class ArticleService:
 
     @staticmethod
     def approve_article(db: Session, article_id: str):
-        article = db.execute(select(Article).filter_by(id=article_id)).scalar_one_or_none()
+        article = ArticleService.get_article_by_id(db, article_id)
         if not article:
             return None
         db.execute(
@@ -93,7 +137,7 @@ class ArticleService:
             select(Article)
             .options(load_only(*ArticleService.PREVIEW_COLUMNS))
             .filter_by(status=ArticleStatus.PUBLISHED)
-            .order_by(Article.date.desc())  # Newest first
+            .order_by(Article.date.desc())
         ).scalars().all()
         
     @staticmethod
@@ -108,15 +152,13 @@ class ArticleService:
 
     @staticmethod
     def get_popular_articles_last_week(db: Session, limit: int = 10):
-        # Calculate datetime 7 days ago (preserve time component)
         one_week_ago = datetime.utcnow() - timedelta(days=7)
-        
         return db.execute(
             select(Article)
             .options(load_only(*ArticleService.PREVIEW_COLUMNS))
             .filter(
                 Article.status == ArticleStatus.PUBLISHED,
-                Article.date >= one_week_ago.isoformat()  
+                Article.date >= one_week_ago
             )
             .order_by(Article.no_of_readers.desc())
             .limit(limit)

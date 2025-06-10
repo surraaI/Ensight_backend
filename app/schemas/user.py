@@ -1,5 +1,8 @@
 from pydantic import BaseModel, EmailStr, field_validator
 from enum import Enum
+from datetime import datetime
+from .subscription_plan import SubscriptionPlan
+from typing import Optional
 
 class UserRole(str, Enum):
     SUPERADMIN = "SUPERADMIN"
@@ -37,7 +40,10 @@ class UserOut(UserBase):
     id: str
     is_active: bool
     role: UserRole
-    requires_password_reset: bool  # Add this field
+    requires_password_reset: bool
+    subscription_plan: Optional[SubscriptionPlan] = None
+    subscription_start: Optional[datetime] = None
+    subscription_end: Optional[datetime] = None
 
     class Config:
         from_attributes = True

@@ -1,0 +1,48 @@
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
+
+# revision identifiers, used by Alembic.
+revision = 'your_revision_id_here'
+down_revision = 'previous_revision_id_here'
+branch_labels = None
+depends_on = None
+
+def upgrade():
+    # Create subscription_plans table first
+    op.create_table(
+        'subscription_plans',
+        sa.Column('id', sa.String(), nullable=False),
+        sa.Column('title', sa.String(), nullable=False),
+        sa.Column('description', sa.String(), nullable=False),
+        sa.Column('price', postgresql.JSON(astext_type=sa.Text()), nullable=False),
+        sa.Column('features', postgresql.ARRAY(sa.String()), nullable=True),
+        sa.Column('button_text', sa.String(), nullable=False),
+        sa.Column('button_link', sa.String(), nullable=False),
+        sa.Column('highlighted', sa.Boolean(), nullable=True),
+        sa.PrimaryKeyConstraint('id')
+    )
+    
+    # Add columns to users table
+    op.add_column('users', sa.Column('subscription_plan_id', sa.String(), nullable=True))
+    op.add_column('users', sa.Column('subscription_start', sa.DateTime(), nullable=True))
+    op.add_column('users', sa.Column('subscription_end', sa.DateTime(), nullable=True))
+    
+    # Create foreign key constraint
+    op.create_foreign_key(
+        'fk_user_subscription_plan',
+        'users', 'subscription_plans',
+        ['subscription_plan_id'], ['id']
+    )
+
+def downgrade():
+    # Remove foreign key first
+    op.drop_constraint('fk_user_subscription_plan', 'users', type_='foreignkey')
+    
+    # Remove columns
+    op.drop_column('users', 'subscription_end')
+    op.drop_column('users', 'subscription_start')
+    op.drop_column('users', 'subscription_plan_id')
+    
+    # Remove subscription_plans table
+    op.drop_table('subscription_plans')
