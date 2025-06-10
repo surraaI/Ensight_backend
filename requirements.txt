@@ -9,4 +9,5 @@ python-jose[cryptography]
 email-validator
 celery
 pydantic-settings>=2.0.0
+python-slugify
 
