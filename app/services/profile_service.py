@@ -1,8 +1,11 @@
 from sqlalchemy.orm import Session
-from app.models.profile import Profile as ProfileModel
+from app.models.profile import Profile as ProfileModel, saved_articles
 from app.schemas.profile import Profile, ProfileUpdate
 from app.models.user import User
 from datetime import datetime
+from app.models.article import Article as ArticleModel
+
+
 
 def get_profile(db: Session, user_id: str) -> ProfileModel:
     profile = db.query(ProfileModel).filter(ProfileModel.user_id == user_id).first()
@@ -45,3 +48,47 @@ def delete_profile(db: Session, user_id: str) -> bool:
     db.delete(profile)
     db.commit()
     return True
+
+def add_saved_article(db: Session, user_id: str, article_id: str) -> ArticleModel:
+    profile = get_profile(db, user_id)
+    if not profile:
+        return None
+    
+    # Check if article exists
+    article = db.query(ArticleModel).filter(ArticleModel.id == article_id).first()
+    if not article:
+        return None
+    
+    # Check if already saved
+    if db.query(saved_articles).filter(
+        saved_articles.c.profile_id == profile.id,
+        saved_articles.c.article_id == article_id
+    ).first():
+        return None
+    
+    # Add to saved articles
+    stmt = saved_articles.insert().values(profile_id=profile.id, article_id=article_id)
+    db.execute(stmt)
+    db.commit()
+    return article
+
+def get_saved_articles(db: Session, user_id: str) -> list[ArticleModel]:
+    profile = get_profile(db, user_id)
+    if not profile:
+        return []
+    
+    return profile.saved_articles
+
+def remove_saved_article(db: Session, user_id: str, article_id: str) -> bool:
+    profile = get_profile(db, user_id)
+    if not profile:
+        return False
+    
+    # Check if the article is saved
+    stmt = saved_articles.delete().where(
+        (saved_articles.c.profile_id == profile.id) &
+        (saved_articles.c.article_id == article_id)
+    )
+    result = db.execute(stmt)
+    db.commit()
+    return result.rowcount > 0

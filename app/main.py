@@ -11,7 +11,6 @@ from app.routers import article
 from app.routers import profile
 from app.routers import resource
 from app.routers import subscription 
-from app.routers import user_subscription
 
 app = FastAPI(
     title="Ensight API",
@@ -43,7 +42,6 @@ app.include_router(article.router)
 app.include_router(profile.router)
 app.include_router(resource.router)
 app.include_router(subscription.router)
-app.include_router(user_subscription.router)
 
 
 @app.get("/")

@@ -30,5 +30,6 @@ class User(Base):
 
     profile = relationship("Profile", uselist=False, back_populates="user")
     articles = relationship("Article", back_populates="author_user")
+    payments = relationship("PaymentSubmission", back_populates="user")
 
     __table_args__ = {'extend_existing': True}
