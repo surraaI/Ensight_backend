@@ -15,8 +15,15 @@ import json
 
 router = APIRouter(prefix="/article", tags=["articles"])
 
-# ===== Fixed Path Endpoints =====
-@router.get("/articles", response_model=List[ArticlePreview])
+# ===== All Articles =====
+@router.get("/", response_model=List[Article])
+async def get_all_articles(db: Session = Depends(get_db)):
+    """Get all articles (any status)"""
+    articles = ArticleService.get_all_articles(db)
+    return articles
+
+# ===== Latest Published Articles =====
+@router.get("/latest", response_model=List[ArticlePreview])
 async def get_latest_articles(db: Session = Depends(get_db)):
     """Get latest published articles"""
     articles = ArticleService.get_latest_articles(db)

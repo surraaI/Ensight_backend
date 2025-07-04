@@ -164,3 +164,9 @@ class ArticleService:
             .order_by(Article.no_of_readers.desc())
             .limit(limit)
         ).scalars().all()
+    
+    @staticmethod
+    def get_all_articles(db: Session):
+        return db.execute(
+            select(Article).order_by(Article.date.desc())
+        ).scalars().all()
