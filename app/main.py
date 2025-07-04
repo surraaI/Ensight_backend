@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from app.routers import auth  
 from app.routers import superadmin
 from app.models import User, Profile
-from app.routers import article 
+from app.routers import article
 from app.routers import profile
 from app.routers import resource
 from app.routers import subscription 

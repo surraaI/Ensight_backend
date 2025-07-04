@@ -13,13 +13,35 @@ import cloudinary.uploader
 import json
 
 
-router = APIRouter(prefix="/article", tags=["articles"])
+router = APIRouter(prefix="/articles", tags=["articles"])
 
-# ===== All Articles =====
+# ===== All Articles with Filters =====
 @router.get("/", response_model=List[Article])
-async def get_all_articles(db: Session = Depends(get_db)):
-    """Get all articles (any status)"""
-    articles = ArticleService.get_all_articles(db)
+async def get_all_articles(
+    status: Optional[str] = Query(None, description="Filter by article status (DRAFT, REVIEW, PUBLISHED)"),
+    author: Optional[str] = Query(None, description="Filter by author ID"),
+    tag: Optional[str] = Query(None, description="Filter by tag keyword"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    """Get all articles with optional filters
+    - Published articles are public.
+    - Unpublished articles require the user to be the author or an editor/admin.
+    """
+    articles = ArticleService.get_all_articles(db, status=status, author=author, tag=tag)
+
+    # Filter unpublished articles
+    if current_user is None:
+        articles = [a for a in articles if a.status == "PUBLISHED"]
+    else:
+        def can_view(article):
+            return (
+                article.status == "PUBLISHED" or
+                article.author == current_user.id or
+                current_user.role in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]
+            )
+        articles = list(filter(can_view, articles))
+
     return articles
 
 # ===== Latest Published Articles =====
@@ -31,7 +53,7 @@ async def get_latest_articles(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No articles found")
     return articles
 
-@router.get("/articles/popular", response_model=List[ArticlePreview])
+@router.get("/popular", response_model=List[ArticlePreview])
 async def get_popular_articles(
     db: Session = Depends(get_db),
     limit: int = Query(10, description="Number of articles to return", gt=0, le=50)
@@ -42,7 +64,7 @@ async def get_popular_articles(
         raise HTTPException(status_code=404, detail="No popular articles found")
     return articles
 
-@router.get("/articles/popular/week", response_model=List[ArticlePreview])
+@router.get("/popular/week", response_model=List[ArticlePreview])
 async def get_popular_articles_last_week(
     db: Session = Depends(get_db),
     limit: int = Query(10, description="Number of articles to return", gt=0, le=50)

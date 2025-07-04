@@ -3,6 +3,7 @@ from sqlalchemy import select, update, func
 from app.models.article import Article, ArticleStatus
 from app.schemas.article import ArticleCreate, ArticleUpdate
 from datetime import datetime, timedelta
+from typing import Optional
 import slugify
 
 class ArticleService:
@@ -166,7 +167,21 @@ class ArticleService:
         ).scalars().all()
     
     @staticmethod
-    def get_all_articles(db: Session):
-        return db.execute(
-            select(Article).order_by(Article.date.desc())
-        ).scalars().all()
+    def get_all_articles(db: Session, status: Optional[str] = None, author: Optional[str] = None, tag: Optional[str] = None):
+        query = select(Article)
+
+        if status:
+            query = query.where(Article.status == status.upper())
+
+        if author:
+            query = query.where(Article.author == author)
+
+        if tag:
+            tag_lower = tag.lower()
+            query = query.where(
+                func.lower(Article.title).like(f"%{tag_lower}%") |
+                func.lower(Article.content).like(f"%{tag_lower}%") |
+                func.lower(Article.description).like(f"%{tag_lower}%")
+            )
+
+        return db.execute(query).scalars().all()
