@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
@@ -8,6 +8,10 @@ from app.models.user import User, Role
 from app.dependencies import get_current_user, get_optional_user, require_role
 from fastapi import Query
 from app.services.subscription import SubscriptionService
+from app.core.cloudinary_config import cloudinary
+import cloudinary.uploader
+import json
+
 
 router = APIRouter(prefix="/article", tags=["articles"])
 
@@ -100,15 +104,29 @@ async def get_article_by_slug(
 # ===== Protected Endpoints =====
 @router.post("/", response_model=Article, status_code=status.HTTP_201_CREATED)
 async def create_article(
-    article: ArticleCreate,
+    article_data: str = Form(...),
+    image: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role([Role.WRITER, Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]))
 ):
-    """Create new article"""
-    article_data = article.dict()
-    article_data["author"] = current_user.id
-    new_article = ArticleService.create_article(db, article_data)
-    return new_article
+    """Create new article with image upload to Cloudinary"""
+    try:
+        # Upload image to Cloudinary
+        upload_result = cloudinary.uploader.upload(image.file, folder="ensight_articles")
+        image_url = upload_result.get("secure_url")
+        if not image_url:
+            raise Exception("Cloudinary did not return a secure_url")
+
+        # Parse and prepare article data
+        data = json.loads(article_data)
+        data["image"] = image_url
+        data["author"] = current_user.id
+
+        new_article = ArticleService.create_article(db, data)
+        return new_article
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create article: {str(e)}")
 
 @router.patch("/{id}", response_model=Article)
 async def update_article(

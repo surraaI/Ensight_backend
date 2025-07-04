@@ -10,7 +10,6 @@ from app.routers import article
 from app.routers import profile
 from app.routers import resource
 from app.routers import subscription 
-from app.routers import upload
 
 
 app = FastAPI(
@@ -42,7 +41,6 @@ app.include_router(article.router)
 app.include_router(profile.router)
 app.include_router(resource.router)
 app.include_router(subscription.router)
-app.include_router(upload.router)
 
 
 @app.get("/")
