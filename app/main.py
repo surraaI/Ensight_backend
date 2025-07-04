@@ -2,15 +2,16 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.routers import auth  
-from app.routers import aggregated_news
-from app.routers import original_content
 from app.routers import superadmin
 from app.models import User, Profile
 from app.routers import article 
 from app.routers import profile
 from app.routers import resource
 from app.routers import subscription 
+from app.routers import upload
+
 
 app = FastAPI(
     title="Ensight API",
@@ -18,6 +19,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.mount("/static", StaticFiles(directory="uploads"), name="static")
 # CORS settings
 origins = [
     "http://localhost",
@@ -35,13 +37,12 @@ app.add_middleware(
 
 # Routers
 app.include_router(auth.router)
-app.include_router(aggregated_news.router)
-app.include_router(original_content.router)
 app.include_router(superadmin.router) 
 app.include_router(article.router) 
 app.include_router(profile.router)
 app.include_router(resource.router)
 app.include_router(subscription.router)
+app.include_router(upload.router)
 
 
 @app.get("/")

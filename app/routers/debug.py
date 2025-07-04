@@ -3,6 +3,7 @@ from jose import jwt
 from app.core.config import settings
 from app.dependencies import get_current_user
 
+
 router = APIRouter()
 
 @router.get("/debug/token")

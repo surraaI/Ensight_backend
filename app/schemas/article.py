@@ -28,8 +28,27 @@ class ArticleBase(CamelModel):
     tag: Optional[str] = None
     no_of_readers: int = 0
 
-class ArticleCreate(ArticleBase):
-    pass
+class ArticleCreate(CamelModel):
+    title: str
+    category: str
+    subcategory: Optional[str] = None
+    date: str  # ISO 8601
+    read_time: str
+    image: str
+    content: str
+    description: str
+    is_premium: bool = False
+    caption: Optional[str] = None
+    quote: Optional[str] = None
+    quote_author: Optional[str] = None
+    tag: Optional[str] = None
+
+    # Optional fields that will be generated in backend
+    slug: Optional[str] = None
+    href: Optional[str] = None
+    author: Optional[str] = None
+    status: Optional[ArticleStatus] = ArticleStatus.DRAFT
+
 
 class ArticleUpdate(CamelModel):
     slug: Optional[str] = None

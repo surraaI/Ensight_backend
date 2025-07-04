@@ -66,27 +66,28 @@ class ArticleService:
 
     @staticmethod
     def create_article(db: Session, article_data: dict):
-        # Generate slug from title if not provided
-        if 'title' in article_data and 'slug' not in article_data:
-            article_data['slug'] = slugify.slugify(article_data['title'])
+        # Generate slug if not provided
+        if not article_data.get("slug") and article_data.get("title"):
+            article_data["slug"] = slugify.slugify(article_data["title"])
         
-        # Ensure category/subcategory are lowercase
-        if 'category' in article_data:
-            article_data['category'] = article_data['category'].lower()
-        if 'subcategory' in article_data:
-            article_data['subcategory'] = article_data['subcategory'].lower()
-        
-        # Generate href from slug
-        if 'slug' in article_data and 'href' not in article_data:
-            article_data['href'] = f"/{article_data.get('category', '')}/" \
-                                   f"{article_data.get('subcategory', '')}/" \
-                                   f"{article_data['slug']}"
-        
+        # Lowercase category/subcategory
+        if "category" in article_data:
+            article_data["category"] = article_data["category"].lower()
+        if "subcategory" in article_data:
+            article_data["subcategory"] = article_data["subcategory"].lower()
+
+        # Generate href from slug if missing
+        if not article_data.get("href") and article_data.get("slug"):
+            article_data["href"] = f"/{article_data.get('category', '')}/" \
+                                f"{article_data.get('subcategory', '')}/" \
+                                f"{article_data['slug']}"
+
         db_article = Article(**article_data)
         db.add(db_article)
         db.commit()
         db.refresh(db_article)
         return db_article
+
 
     @staticmethod
     def update_article(db: Session, article_id: str, article_update: ArticleUpdate):
