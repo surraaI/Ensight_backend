@@ -32,7 +32,7 @@ def login_user(credentials: UserLogin, db: Session):
 
     access_token = create_access_token(
         data={"sub": user.id, "role": user.role},
-        expires_delta=timedelta(minutes=30)
+        expires_delta=timedelta(minutes=1440)
     )
 
     return {

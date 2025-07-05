@@ -7,7 +7,7 @@ from alembic import context
 
 # Import your Base and models FIRST
 from app.database import Base, DATABASE_URL
-from app.models import user, aggregated_news, original_content, enterprise, api_key
+from app.models import user, enterprise, api_key
 
 # Set target_metadata to your Base's metadata
 target_metadata = Base.metadata
