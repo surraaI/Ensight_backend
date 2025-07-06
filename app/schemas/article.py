@@ -87,7 +87,7 @@ class ArticlePreview(CamelModel):
 
 class Article(ArticlePreview):
     author: str  # Full name or display name
-    written_by: str
+    written_by: Optional[str] = None
     reviewed_by: Optional[str] = None
     href: str
     content: str
