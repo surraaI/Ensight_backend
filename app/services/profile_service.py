@@ -8,6 +8,7 @@ from app.models.user import Role
 from passlib.context import CryptContext
 import uuid
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_profile(db: Session, user_id: str) -> ProfileModel:
     profile = db.query(ProfileModel).filter(ProfileModel.user_id == user_id).first()
