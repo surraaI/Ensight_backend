@@ -1,10 +1,12 @@
 from sqlalchemy.orm import Session
 from app.models.profile import Profile as ProfileModel, saved_articles
-from app.schemas.profile import Profile, ProfileUpdate
+from app.schemas.profile import Profile, ProfileUpdate, ProfileCreate
 from app.models.user import User
 from datetime import datetime
 from app.models.article import Article as ArticleModel
-
+from app.models.user import Role
+from passlib.context import CryptContext
+import uuid
 
 
 def get_profile(db: Session, user_id: str) -> ProfileModel:
@@ -92,3 +94,40 @@ def remove_saved_article(db: Session, user_id: str, article_id: str) -> bool:
     result = db.execute(stmt)
     db.commit()
     return result.rowcount > 0
+
+def get_all_profiles(db: Session) -> list[ProfileModel]:
+    return db.query(ProfileModel).all()
+
+
+def create_user_with_role(db: Session, profile_data: ProfileCreate) -> ProfileModel:
+    # Check for valid role
+    role = profile_data.role.upper()
+    if role not in ["ADMIN", "USER"]:
+        raise ValueError("Invalid role. Must be 'ADMIN' or 'USER'.")
+
+    # Check for duplicate email
+    if db.query(User).filter(User.email == profile_data.email).first():
+        raise ValueError("Email already exists.")
+
+    # Create user
+    user = User(
+        id=str(uuid.uuid4()),
+        email=profile_data.email,
+        hashed_password=pwd_context.hash(profile_data.password),
+        role=Role.ADMIN if role == "ADMIN" else Role.FREE_USER
+    )
+    db.add(user)
+    db.commit()
+
+    # Create associated profile
+    profile = ProfileModel(
+        user_id=user.id,
+        first_name=profile_data.first_name,
+        last_name=profile_data.last_name,
+        email=profile_data.email,
+        created_at=datetime.utcnow().isoformat()
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    return profile

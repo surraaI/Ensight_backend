@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
+from typing import List, Optional
 from app.database import get_db
-from app.services.profile_service import get_profile, update_profile, delete_profile, add_saved_article, get_saved_articles,remove_saved_article
-from app.schemas.profile import Profile, ProfileUpdate
-from app.dependencies import get_current_user
-from app.schemas.article import Article 
+from app.services.profile_service import (
+    get_profile, update_profile, delete_profile,
+    add_saved_article, get_saved_articles, remove_saved_article,
+    get_all_profiles, create_user_with_role
+)
+from app.schemas.profile import Profile, ProfileUpdate, ProfileCreate
+from app.dependencies import get_current_user, require_role
+from app.models.user import Role, User
+from app.schemas.article import Article
 
 
 router = APIRouter(prefix="/Profile", tags=["Profiles"])
@@ -90,3 +96,20 @@ def remove_saved_article_for_user(
     
     if not remove_saved_article(db, user_id, article_id):
         raise HTTPException(status_code=404, detail="Saved article not found")
+    
+
+@router.get("/", response_model=List[Profile])
+def get_all_user_profiles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([Role.SUPERADMIN]))
+):
+    return get_all_profiles(db)
+
+
+@router.post("/", response_model=Profile, status_code=status.HTTP_201_CREATED)
+def create_profile_with_role(
+    profile_data: ProfileCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role([Role.SUPERADMIN]))
+):
+    return create_user_with_role(db, profile_data)
