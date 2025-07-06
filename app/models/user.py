@@ -29,7 +29,21 @@ class User(Base):
     subscription_end = Column(DateTime, nullable=True)
 
     profile = relationship("Profile", uselist=False, back_populates="user")
-    articles = relationship("Article", back_populates="author_user")
+    
+    # Articles written by this user
+    articles = relationship(
+        "Article",
+        back_populates="written_by_user",
+        foreign_keys="[Article.written_by]"
+    )
+
+    # Articles reviewed by this user
+    reviewed_articles = relationship(
+        "Article",
+        back_populates="reviewed_by_user",
+        foreign_keys="[Article.reviewed_by]"
+    )
+
     # payments = relationship("PaymentSubmission", back_populates="user")
 
     __table_args__ = {'extend_existing': True}

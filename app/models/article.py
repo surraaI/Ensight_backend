@@ -17,8 +17,10 @@ class Article(Base):
     title = Column(String, nullable=False)
     category = Column(String, nullable=False, index=True)
     subcategory = Column(String, index=True)
-    author = Column(String, ForeignKey("users.id"), nullable=False)
-    date = Column(String, nullable=False)  # ISO 8601 format
+    written_by = Column(String, ForeignKey("users.id"), nullable=False)
+    reviewed_by = Column(String, ForeignKey("users.id"), nullable=True)
+    author = Column(String, nullable=False)  # This can be the author's name or username
+    date = Column(String, nullable=False)  
     read_time = Column(String, nullable=False)
     image = Column(String, nullable=False)
     href = Column(String, nullable=False)
@@ -32,6 +34,16 @@ class Article(Base):
     tag = Column(String)
     no_of_readers = Column(Integer, default=0, nullable=False)
 
-    author_user = relationship("User", back_populates="articles")
+    written_by_user = relationship(
+        "User",
+        back_populates="articles",
+        foreign_keys=[written_by]
+    )
+
+    reviewed_by_user = relationship(
+        "User",
+        back_populates="reviewed_articles",
+        foreign_keys=[reviewed_by]
+    )
 
     __table_args__ = {'extend_existing': True}

@@ -19,7 +19,7 @@ router = APIRouter(prefix="/articles", tags=["articles"])
 @router.get("/", response_model=List[Article])
 async def get_all_articles(
     status: Optional[str] = Query(None, description="Filter by article status (DRAFT, REVIEW, PUBLISHED)"),
-    author: Optional[str] = Query(None, description="Filter by author ID"),
+    author: Optional[str] = Query(None, description="Filter by author name"),
     tag: Optional[str] = Query(None, description="Filter by tag keyword"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user)
@@ -37,7 +37,7 @@ async def get_all_articles(
         def can_view(article):
             return (
                 article.status == "PUBLISHED" or
-                article.author == current_user.id or
+                article.written_by == current_user.id or
                 current_user.role in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]
             )
         articles = list(filter(can_view, articles))
@@ -149,7 +149,7 @@ async def create_article(
         # Parse and prepare article data
         data = json.loads(article_data)
         data["image"] = image_url
-        data["author"] = current_user.id
+        data["written_by"] = current_user.id
 
         new_article = ArticleService.create_article(db, data)
         return new_article
@@ -160,24 +160,33 @@ async def create_article(
 @router.patch("/{id}", response_model=Article)
 async def update_article(
     id: str,
-    article_update: ArticleUpdate,
+    article_data: str = Form(...),
+    image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Update existing article"""
+    """Update existing article with optional new image"""
     article = ArticleService.get_article_by_id(db, id)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
-    
+
     # Authorization check
-    if article.author != current_user.id and current_user.role not in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to edit this article"
-        )
-    
-    updated_article = ArticleService.update_article(db, id, article_update)
-    return updated_article
+    if article.written_by != current_user.id and current_user.role not in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this article")
+
+    try:
+        update_data = json.loads(article_data)
+
+        # If image provided, upload it
+        if image:
+            upload_result = cloudinary.uploader.upload(image.file, folder="ensight_articles")
+            update_data["image"] = upload_result.get("secure_url")
+
+        updated_article = ArticleService.update_article(db, id, ArticleUpdate(**update_data))
+        return updated_article
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Update failed: {str(e)}")
 
 @router.patch("/{id}/approve", response_model=Article)
 async def approve_article(
@@ -190,3 +199,24 @@ async def approve_article(
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     return article
+
+# ===== Delete Article =====
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_article(
+    id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete an article"""
+    article = ArticleService.get_article_by_id(db, id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    if article.written_by != current_user.id and current_user.role not in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this article"
+        )
+
+    ArticleService.delete_article(db, id)
+    return {"detail": "Article deleted successfully"}

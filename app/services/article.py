@@ -14,7 +14,7 @@ class ArticleService:
         Article.title,
         Article.category,
         Article.subcategory,
-        Article.author,
+        Article.written_by,       
         Article.status,
         Article.content,
         Article.date,
@@ -23,8 +23,8 @@ class ArticleService:
         Article.image,
         Article.description,
         Article.is_premium,
-        Article.no_of_readers,
-        Article.href  # Added href field
+        Article.href,
+        Article.author            # display name
     ]
 
     @staticmethod
@@ -77,18 +77,17 @@ class ArticleService:
         if "subcategory" in article_data:
             article_data["subcategory"] = article_data["subcategory"].lower()
 
-        # Generate href from slug if missing
+        # Generate href if not provided
         if not article_data.get("href") and article_data.get("slug"):
             article_data["href"] = f"/{article_data.get('category', '')}/" \
-                                f"{article_data.get('subcategory', '')}/" \
-                                f"{article_data['slug']}"
+                                   f"{article_data.get('subcategory', '')}/" \
+                                   f"{article_data['slug']}"
 
         db_article = Article(**article_data)
         db.add(db_article)
         db.commit()
         db.refresh(db_article)
         return db_article
-
 
     @staticmethod
     def update_article(db: Session, article_id: str, article_update: ArticleUpdate):
@@ -97,23 +96,23 @@ class ArticleService:
             return None
         
         update_data = article_update.dict(exclude_unset=True)
-        
+
         # Handle slug generation if title is updated
         if 'title' in update_data and 'slug' not in update_data:
             update_data['slug'] = slugify.slugify(update_data['title'])
-        
-        # Handle category/subcategory lowercase conversion
+
+        # Lowercase category/subcategory
         for field in ['category', 'subcategory']:
             if field in update_data:
                 update_data[field] = update_data[field].lower()
-        
-        # Regenerate href if slug or categories change
+
+        # Regenerate href if slug or category/subcategory changed
         if any(field in update_data for field in ['slug', 'category', 'subcategory']):
             category = update_data.get('category', article.category)
             subcategory = update_data.get('subcategory', article.subcategory)
             slug = update_data.get('slug', article.slug)
             update_data['href'] = f"/{category}/{subcategory}/{slug}"
-        
+
         db.execute(
             update(Article).where(Article.id == article_id).values(**update_data)
         )
@@ -132,7 +131,7 @@ class ArticleService:
         db.commit()
         db.refresh(article)
         return article
-    
+
     @staticmethod
     def get_latest_articles(db: Session):
         return db.execute(
@@ -141,7 +140,7 @@ class ArticleService:
             .filter_by(status=ArticleStatus.PUBLISHED)
             .order_by(Article.date.desc())
         ).scalars().all()
-        
+
     @staticmethod
     def get_popular_articles(db: Session, limit: int = 10):
         return db.execute(
@@ -165,9 +164,14 @@ class ArticleService:
             .order_by(Article.no_of_readers.desc())
             .limit(limit)
         ).scalars().all()
-    
+
     @staticmethod
-    def get_all_articles(db: Session, status: Optional[str] = None, author: Optional[str] = None, tag: Optional[str] = None):
+    def get_all_articles(
+        db: Session,
+        status: Optional[str] = None,
+        author: Optional[str] = None,
+        tag: Optional[str] = None
+    ):
         query = select(Article)
 
         if status:
@@ -185,3 +189,10 @@ class ArticleService:
             )
 
         return db.execute(query).scalars().all()
+
+    @staticmethod
+    def delete_article(db: Session, article_id: str):
+        article = db.query(Article).filter(Article.id == article_id).first()
+        if article:
+            db.delete(article)
+            db.commit()

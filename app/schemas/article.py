@@ -13,7 +13,9 @@ class ArticleBase(CamelModel):
     title: str
     category: str
     subcategory: Optional[str] = None
-    author: str
+    author: str  # Display name (e.g., full name or username)
+    written_by: str  # User ID
+    reviewed_by: Optional[str] = None
     date: str  # ISO 8601
     read_time: str
     image: str
@@ -43,12 +45,12 @@ class ArticleCreate(CamelModel):
     quote_author: Optional[str] = None
     tag: Optional[str] = None
 
-    # Optional fields that will be generated in backend
+    # Optional fields generated/set by backend
     slug: Optional[str] = None
     href: Optional[str] = None
-    author: Optional[str] = None
+    written_by: Optional[str] = None
+    reviewed_by: Optional[str] = None
     status: Optional[ArticleStatus] = ArticleStatus.DRAFT
-
 
 class ArticleUpdate(CamelModel):
     slug: Optional[str] = None
@@ -67,6 +69,8 @@ class ArticleUpdate(CamelModel):
     quote: Optional[str] = None
     quote_author: Optional[str] = None
     tag: Optional[str] = None
+    written_by: Optional[str] = None
+    reviewed_by: Optional[str] = None
 
 class ArticlePreview(CamelModel):
     id: str
@@ -82,7 +86,9 @@ class ArticlePreview(CamelModel):
     no_of_readers: int = 0
 
 class Article(ArticlePreview):
-    author: str
+    author: str  # Full name or display name
+    written_by: str
+    reviewed_by: Optional[str] = None
     href: str
     content: str
     caption: Optional[str] = None
