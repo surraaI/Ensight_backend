@@ -73,6 +73,27 @@ async def get_popular_articles_last_week(
     articles = ArticleService.get_popular_articles_last_week(db, limit)
     return articles or []
 
+@router.get("/{id}", response_model=Article)
+async def get_article_by_id(
+    id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    """Get a single article by its ID"""
+    article = ArticleService.get_article_by_id(db, id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    # Restrict access to unpublished articles
+    if article.status != "PUBLISHED":
+        if not current_user or (
+            article.written_by != current_user.id and
+            current_user.role not in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]
+        ):
+            raise HTTPException(status_code=403, detail="Not authorized to view this article")
+
+    return article
+
 # ===== Parameterized Path Endpoints =====
 @router.get("/{category}", response_model=List[ArticlePreview])
 async def get_articles_by_category(
@@ -221,23 +242,3 @@ async def delete_article(
     ArticleService.delete_article(db, id)
     return {"detail": "Article deleted successfully"}
 
-@router.get("/{id}", response_model=Article)
-async def get_article_by_id(
-    id: str,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
-):
-    """Get a single article by its ID"""
-    article = ArticleService.get_article_by_id(db, id)
-    if not article:
-        raise HTTPException(status_code=404, detail="Article not found")
-
-    # Restrict access to unpublished articles
-    if article.status != "PUBLISHED":
-        if not current_user or (
-            article.written_by != current_user.id and
-            current_user.role not in [Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]
-        ):
-            raise HTTPException(status_code=403, detail="Not authorized to view this article")
-
-    return article
