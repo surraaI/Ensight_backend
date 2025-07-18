@@ -23,7 +23,7 @@ class Profile(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
-    avatar = Column(String)
+    profile_image = Column(String)
     created_at = Column(String, nullable=False)  # ISO 8601 format
     enable_personalization = Column(Boolean, default=False)
     track_reading_progress = Column(Boolean, default=False)

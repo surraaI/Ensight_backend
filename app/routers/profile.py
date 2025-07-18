@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Form, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
@@ -11,9 +11,17 @@ from app.schemas.profile import Profile, ProfileUpdate, ProfileCreate
 from app.dependencies import get_current_user, require_role
 from app.models.user import Role, User
 from app.schemas.article import Article
+from datetime import datetime
 
 
 router = APIRouter(prefix="/Profile", tags=["Profiles"])
+
+import cloudinary.uploader
+from fastapi import UploadFile
+
+def upload_profile_image_to_cloudinary(file: UploadFile) -> str:
+    result = cloudinary.uploader.upload(file.file, folder="profile_images")
+    return result.get("secure_url")
 
 @router.get("/{user_id}", response_model=Profile)
 def read_profile(
@@ -105,11 +113,31 @@ def get_all_user_profiles(
 ):
     return get_all_profiles(db)
 
-
 @router.post("/", response_model=Profile, status_code=status.HTTP_201_CREATED)
 def create_profile_with_role(
-    profile_data: ProfileCreate,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    role: Role = Form(...),
+    profile_image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role([Role.SUPERADMIN]))
 ):
-    return create_user_with_role(db, profile_data)
+    image_url = None
+    if profile_image:
+        try:
+            image_url = upload_profile_image_to_cloudinary(profile_image)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
+
+    profile_data = ProfileCreate(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        password=password,
+        role=role,
+        created_at=datetime.utcnow().isoformat()
+    )
+
+    return create_user_with_role(db, profile_data, profile_image_path=image_url)

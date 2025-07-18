@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, Depends
+from typing import Optional, List
 from app.models.profile import Profile as ProfileModel, saved_articles
 from app.schemas.profile import Profile, ProfileUpdate, ProfileCreate
 from app.models.user import User
@@ -7,6 +9,8 @@ from app.models.article import Article as ArticleModel
 from app.models.user import Role
 from passlib.context import CryptContext
 import uuid
+
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -100,22 +104,30 @@ def get_all_profiles(db: Session) -> list[ProfileModel]:
     return db.query(ProfileModel).all()
 
 
-def create_user_with_role(db: Session, profile_data: ProfileCreate) -> ProfileModel:
+def create_user_with_role(
+    db: Session, 
+    profile_data: ProfileCreate, 
+    profile_image_path: Optional[str] = None
+) -> ProfileModel:
     # Check for valid role
     role = profile_data.role.upper()
-    if role not in ["ADMIN", "USER"]:
-        raise ValueError("Invalid role. Must be 'ADMIN' or 'USER'.")
+    if role not in [r.value for r in Role]:
+        # Changed to HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid role. Allowed: {', '.join([r.value for r in Role])}"
+        )
 
     # Check for duplicate email
     if db.query(User).filter(User.email == profile_data.email).first():
-        raise ValueError("Email already exists.")
+        raise HTTPException(status_code=400, detail="Email already exists.")
 
     # Create user
     user = User(
         id=str(uuid.uuid4()),
         email=profile_data.email,
         hashed_password=pwd_context.hash(profile_data.password),
-        role=Role.ADMIN if role == "ADMIN" else Role.FREE_USER
+        role=Role.ADMIN if role == "ADMIN" else Role.FREE_USER if role == "FREE_USER" else Role.EDITOR if role == "EDITOR" else Role.WRITER
     )
     db.add(user)
     db.commit()
@@ -126,6 +138,7 @@ def create_user_with_role(db: Session, profile_data: ProfileCreate) -> ProfileMo
         first_name=profile_data.first_name,
         last_name=profile_data.last_name,
         email=profile_data.email,
+        profile_image=profile_image_path,
         created_at=datetime.utcnow().isoformat()
     )
     db.add(profile)
