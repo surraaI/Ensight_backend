@@ -47,17 +47,53 @@ def read_profile(
 @router.patch("/{user_id}", response_model=Profile)
 def update_user_profile(
     user_id: str,
-    profile_data: ProfileUpdate,
-    current_user: dict = Depends(get_current_user),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    enable_personalization: Optional[bool] = Form(None),
+    track_reading_progress: Optional[bool] = Form(None),
+    content_update_notifications: Optional[bool] = Form(None),
+    topics: Optional[str] = Form(None),  # JSON string
+    profile_image: Optional[UploadFile] = File(None),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if current_user.id != user_id:
+    if current_user.role != Role.SUPERADMIN and str(current_user.id) != str(user_id):
         raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
+
+    image_url = None
+    if profile_image:
+        try:
+            image_url = upload_profile_image_to_cloudinary(profile_image)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
+
+    parsed_topics = []
+    if topics:
+        try:
+            import json
+            parsed_topics = json.loads(topics)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid 'topics' JSON")
+
+    # Only include explicitly provided fields
+    update_fields = {}
+    if first_name is not None: update_fields["first_name"] = first_name
+    if last_name is not None: update_fields["last_name"] = last_name
+    if email is not None: update_fields["email"] = email
+    if image_url: update_fields["profile_image"] = image_url
+    if enable_personalization is not None: update_fields["enable_personalization"] = enable_personalization
+    if track_reading_progress is not None: update_fields["track_reading_progress"] = track_reading_progress
+    if content_update_notifications is not None: update_fields["content_update_notifications"] = content_update_notifications
+    if topics: update_fields["topics"] = parsed_topics
+
+    profile_data = ProfileUpdate(**update_fields)
+
     profile = update_profile(db, user_id, profile_data)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     return profile
+
 
 @router.delete("/{user_id}")
 def delete_user_profile(
