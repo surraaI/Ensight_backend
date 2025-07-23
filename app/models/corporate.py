@@ -1,7 +1,7 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, DateTime
 from app.database import Base
 import uuid
-
+from datetime import datetime
 class Corporate(Base):
     __tablename__ = "corporates"
 
@@ -21,3 +21,4 @@ class Corporate(Base):
     motto = Column(String)
     founded = Column(String)
     quote = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)

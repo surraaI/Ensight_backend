@@ -17,7 +17,7 @@ class Article(Base):
     title = Column(String, nullable=False)
     category = Column(String, nullable=False, index=True)
     subcategory = Column(String, index=True)
-    written_by = Column(String, ForeignKey("users.id"), nullable=False)
+    written_by = Column(String, ForeignKey("users.id"), nullable=True)
     reviewed_by = Column(String, ForeignKey("users.id"), nullable=True)
     author = Column(String, nullable=False)  # This can be the author's name or username
     date = Column(String, nullable=False)  

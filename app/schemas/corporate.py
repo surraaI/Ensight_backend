@@ -41,6 +41,7 @@ class CorporateUpdate(BaseModel):
 
 class CorporateOut(CorporateBase):
     id: str
+    created_at: str
 
     class Config:
         orm_mode = True
