@@ -2,6 +2,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+from dotenv import load_dotenv  # <- add this
+
+load_dotenv()  # <- load the .env file from project root
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/ensight")
 
