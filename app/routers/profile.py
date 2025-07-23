@@ -14,7 +14,7 @@ from app.schemas.article import Article
 from datetime import datetime
 
 
-router = APIRouter(prefix="/Profile", tags=["Profiles"])
+router = APIRouter(prefix="/profiles", tags=["Profiles"])
 
 import cloudinary.uploader
 from fastapi import UploadFile
@@ -26,17 +26,23 @@ def upload_profile_image_to_cloudinary(file: UploadFile) -> str:
 @router.get("/{user_id}", response_model=Profile)
 def read_profile(
     user_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Ensure users can only access their own profile
-    if current_user.id != user_id:
+    try:
+        role = Role(current_user.role)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Invalid role")
+
+    if role != Role.SUPERADMIN and str(current_user.id) != str(user_id):
         raise HTTPException(status_code=403, detail="Not authorized to access this profile")
-    
+
     profile = get_profile(db, user_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     return profile
+
+
 
 @router.patch("/{user_id}", response_model=Profile)
 def update_user_profile(
