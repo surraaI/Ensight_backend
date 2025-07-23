@@ -6,8 +6,55 @@ from app.schemas.resources import (
     DataInsightBase, 
     EventBase
 )
+from app.models.resources import Resources 
+from fastapi import HTTPException
+from typing import List
+import json
 
 class ResourceService:
+    
+    @staticmethod
+    def create_resources(db: Session, title, description, featured_insight_id, report_ids, data_insight_ids, event_ids):
+        resources = db.query(Resources).first()
+        if resources:
+            raise HTTPException(status_code=400, detail="Resources already exist")
+
+        resource = Resources(
+            title=title,
+            description=description,
+            featured_insight_id=featured_insight_id,
+            report_ids=json.loads(report_ids or "[]"),
+            data_insight_ids=json.loads(data_insight_ids or "[]"),
+            event_ids=json.loads(event_ids or "[]"),
+        )
+        db.add(resource)
+        db.commit()
+        db.refresh(resource)
+        return resource
+
+    @staticmethod
+    def update_resources(db: Session, title, description, featured_insight_id, report_ids, data_insight_ids, event_ids):
+        resources = db.query(Resources).first()
+        if not resources:
+            raise HTTPException(status_code=404, detail="Resources not found")
+
+        if title is not None:
+            resources.title = title
+        if description is not None:
+            resources.description = description
+        if featured_insight_id is not None:
+            resources.featured_insight_id = featured_insight_id
+        if report_ids is not None:
+            resources.report_ids = json.loads(report_ids or "[]")
+        if data_insight_ids is not None:
+            resources.data_insight_ids = json.loads(data_insight_ids or "[]")
+        if event_ids is not None:
+            resources.event_ids = json.loads(event_ids or "[]")
+
+        db.commit()
+        db.refresh(resources)
+        return resources
+    
     @staticmethod
     def get_resources_by_type(db: Session, resource_type: str):
         if resource_type == "report":
