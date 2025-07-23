@@ -1,12 +1,17 @@
+from pydantic import HttpUrl
 from sqlalchemy.orm import Session
 from app.models.corporate import Corporate
 from app.schemas.corporate import CorporateCreate, CorporateUpdate
 
-
 class CorporateService:
     @staticmethod
     def create_corporate(db: Session, data: CorporateCreate):
-        corp = Corporate(**data.dict())
+        payload = data.dict()
+        for key in ["image", "profile_image"]:
+            if isinstance(payload.get(key), HttpUrl):
+                payload[key] = str(payload[key])
+
+        corp = Corporate(**payload)
         db.add(corp)
         db.commit()
         db.refresh(corp)
@@ -18,12 +23,18 @@ class CorporateService:
         if not corp:
             return None
 
-        for key, value in updates.dict(exclude_unset=True).items():
+        update_data = updates.dict(exclude_unset=True)
+        for field in ["image", "profile_image"]:
+            if isinstance(update_data.get(field), HttpUrl):
+                update_data[field] = str(update_data[field])
+
+        for key, value in update_data.items():
             setattr(corp, key, value)
 
         db.commit()
         db.refresh(corp)
         return corp
+
 
     @staticmethod
     def delete_corporate(db: Session, id: str):

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
-
+from datetime import datetime
 
 class CorporateBase(BaseModel):
     title: str
@@ -41,7 +41,7 @@ class CorporateUpdate(BaseModel):
 
 class CorporateOut(CorporateBase):
     id: str
-    created_at: str
+    created_at: datetime
 
     class Config:
         orm_mode = True
