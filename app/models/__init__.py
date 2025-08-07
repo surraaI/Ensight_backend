@@ -7,3 +7,4 @@ from .article import Article
 # Import more complex models last
 from .category import Category, Subcategory
 from .corporate import Corporate
+from .resources import Resources

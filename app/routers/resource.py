@@ -92,9 +92,15 @@ async def get_resource_by_slug(
     return resource
 
 @router.get("/", response_model=Resources)
-async def get_resources_page(
+async def get_resources(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get the main resources page configuration"""
-    return ResourceService.get_resources_page(db)
+    resources = ResourceService.get_resources(db)
+    if not resources:
+        raise HTTPException(
+            status_code=404, 
+            detail="Resources do not found. Please create it first."
+        )
+    return resources
