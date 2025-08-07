@@ -1,6 +1,9 @@
-from .category import Category, Subcategory
+# Import order matters - put simple models first
 from .user import User
 from .profile import Profile
-from .article import Article  # Add other models as needed
 from .subscription_plan import SubscriptionPlan
-from app.models.corporate import Corporate
+from .article import Article
+
+# Import more complex models last
+from .category import Category, Subcategory
+from .corporate import Corporate

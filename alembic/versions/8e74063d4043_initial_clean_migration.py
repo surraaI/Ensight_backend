@@ -1,8 +1,8 @@
-"""initial
+"""initial clean migration
 
-Revision ID: 6e3a6999f5c1
+Revision ID: 8e74063d4043
 Revises: 
-Create Date: 2025-06-30 16:04:47.361458
+Create Date: 2025-08-07 20:24:55.379834
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '6e3a6999f5c1'
+revision: str = '8e74063d4043'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,6 +26,26 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
+    )
+    op.create_table('corporates',
+    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('title', sa.String(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('content', sa.String(), nullable=True),
+    sa.Column('image', sa.String(), nullable=True),
+    sa.Column('profile_image', sa.String(), nullable=True),
+    sa.Column('name', sa.String(), nullable=True),
+    sa.Column('role', sa.String(), nullable=True),
+    sa.Column('born', sa.String(), nullable=True),
+    sa.Column('education', sa.String(), nullable=True),
+    sa.Column('mission', sa.String(), nullable=True),
+    sa.Column('specialties', sa.String(), nullable=True),
+    sa.Column('certifications', sa.String(), nullable=True),
+    sa.Column('motto', sa.String(), nullable=True),
+    sa.Column('founded', sa.String(), nullable=True),
+    sa.Column('quote', sa.String(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('enterprise_accounts',
     sa.Column('id', sa.String(), nullable=False),
@@ -76,42 +96,14 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
-    op.create_table('aggregated_news',
-    sa.Column('id', sa.String(), nullable=False),
-    sa.Column('title', sa.String(), nullable=False),
-    sa.Column('summary', sa.Text(), nullable=False),
-    sa.Column('source', sa.String(), nullable=False),
-    sa.Column('url', sa.String(), nullable=False),
-    sa.Column('thumbnail_url', sa.String(), nullable=True),
-    sa.Column('status', sa.Enum('draft', 'published', name='agg_news_status'), nullable=False),
-    sa.Column('slug', sa.String(), nullable=True),
-    sa.Column('meta_description', sa.String(), nullable=True),
-    sa.Column('is_featured', sa.Boolean(), nullable=True),
-    sa.Column('is_deleted', sa.Boolean(), nullable=True),
-    sa.Column('views', sa.Integer(), nullable=True),
-    sa.Column('shares', sa.Integer(), nullable=True),
-    sa.Column('category_id', sa.String(), nullable=True),
-    sa.Column('subcategory_id', sa.String(), nullable=True),
-    sa.Column('published_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('written_by', sa.String(), nullable=True),
-    sa.Column('edited_by', sa.String(), nullable=True),
-    sa.Column('approved_by', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['approved_by'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
-    sa.ForeignKeyConstraint(['edited_by'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['subcategory_id'], ['subcategories.id'], ),
-    sa.ForeignKeyConstraint(['written_by'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_aggregated_news_slug'), 'aggregated_news', ['slug'], unique=True)
     op.create_table('articles',
     sa.Column('id', sa.String(), nullable=False),
     sa.Column('slug', sa.String(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('category', sa.String(), nullable=False),
     sa.Column('subcategory', sa.String(), nullable=True),
+    sa.Column('written_by', sa.String(), nullable=True),
+    sa.Column('reviewed_by', sa.String(), nullable=True),
     sa.Column('author', sa.String(), nullable=False),
     sa.Column('date', sa.String(), nullable=False),
     sa.Column('read_time', sa.String(), nullable=False),
@@ -126,7 +118,8 @@ def upgrade() -> None:
     sa.Column('quote_author', sa.String(), nullable=True),
     sa.Column('tag', sa.String(), nullable=True),
     sa.Column('no_of_readers', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['author'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['reviewed_by'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['written_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_articles_category'), 'articles', ['category'], unique=False)
@@ -140,35 +133,13 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('original_content',
-    sa.Column('id', sa.String(), nullable=False),
-    sa.Column('title', sa.String(), nullable=False),
-    sa.Column('body', sa.Text(), nullable=False),
-    sa.Column('is_premium', sa.Boolean(), nullable=True),
-    sa.Column('image_url', sa.String(), nullable=True),
-    sa.Column('category_id', sa.String(), nullable=True),
-    sa.Column('subcategory_id', sa.String(), nullable=True),
-    sa.Column('status', sa.Enum('DRAFT', 'PUBLISHED', name='original_content_status'), nullable=True),
-    sa.Column('written_by_id', sa.String(), nullable=True),
-    sa.Column('edited_by_id', sa.String(), nullable=True),
-    sa.Column('approved_by_id', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('published_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['approved_by_id'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
-    sa.ForeignKeyConstraint(['edited_by_id'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['subcategory_id'], ['subcategories.id'], ),
-    sa.ForeignKeyConstraint(['written_by_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('profiles',
     sa.Column('id', sa.String(), nullable=False),
     sa.Column('user_id', sa.String(), nullable=False),
     sa.Column('first_name', sa.String(), nullable=False),
     sa.Column('last_name', sa.String(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
-    sa.Column('avatar', sa.String(), nullable=True),
+    sa.Column('profile_image', sa.String(), nullable=True),
     sa.Column('created_at', sa.String(), nullable=False),
     sa.Column('enable_personalization', sa.Boolean(), nullable=True),
     sa.Column('track_reading_progress', sa.Boolean(), nullable=True),
@@ -204,14 +175,11 @@ def downgrade() -> None:
     op.drop_table('saved_articles')
     op.drop_table('reading_history')
     op.drop_table('profiles')
-    op.drop_table('original_content')
     op.drop_table('enterprise_users')
     op.drop_index(op.f('ix_articles_subcategory'), table_name='articles')
     op.drop_index(op.f('ix_articles_slug'), table_name='articles')
     op.drop_index(op.f('ix_articles_category'), table_name='articles')
     op.drop_table('articles')
-    op.drop_index(op.f('ix_aggregated_news_slug'), table_name='aggregated_news')
-    op.drop_table('aggregated_news')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     op.drop_table('subcategories')
@@ -219,5 +187,6 @@ def downgrade() -> None:
     op.drop_table('api_keys')
     op.drop_table('subscription_plans')
     op.drop_table('enterprise_accounts')
+    op.drop_table('corporates')
     op.drop_table('categories')
     # ### end Alembic commands ###
