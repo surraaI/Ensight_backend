@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Optional
 from .article import Article
 from .report import Report
 from .data_insight import DataInsight
@@ -9,7 +9,7 @@ from .event import Event
 class ResourcesBase(BaseModel):
     title: str
     description: str
-    featured_insight_id: str
+    featured_insight_id: Optional[str] = None 
     report_ids: List[str] = []
     data_insight_ids: List[str] = []
     event_ids: List[str] = []
