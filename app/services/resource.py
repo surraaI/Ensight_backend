@@ -82,17 +82,7 @@ class ResourceService:
         return None
 
     @staticmethod
-    def get_resources_page(db: Session):
-        # Get the main resources page configuration
-        resources = db.execute(select(Resources)).scalar_one_or_none()
-        if not resources:
-            # Create default if none exists
-            resources = Resources(
-                title="Ensight Intelligence Hub",
-                description="Your hub for reports, data insights, and events",
-                featured_insight_id=""
-            )
-            db.add(resources)
-            db.commit()
-            db.refresh(resources)
+    def get_resources(db: Session):
+        # Simply return the first resources entry if exists
+        resources = db.scalars(select(Resources)).first()
         return resources
