@@ -1,6 +1,5 @@
-from .category import Category, Subcategory
-from .user import User
-from .profile import Profile
-from .article import Article  # Add other models as needed
+from app.models.user import User, Role
+from app.models.profile import Profile
+from .article import Article  
 from .subscription_plan import SubscriptionPlan
 from app.models.corporate import Corporate

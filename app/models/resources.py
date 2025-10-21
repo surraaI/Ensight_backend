@@ -34,7 +34,7 @@ class Resources(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    featured_insight_id = Column(String, ForeignKey("articles.id"), nullable=False)
+    featured_insight_id = Column(String, ForeignKey("articles.id"), nullable=True)
     report_ids = Column(ARRAY(String), default=[])
     data_insight_ids = Column(ARRAY(String), default=[])
     event_ids = Column(ARRAY(String), default=[])

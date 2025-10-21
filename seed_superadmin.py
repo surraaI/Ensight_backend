@@ -3,11 +3,8 @@ import sys
 from dotenv import load_dotenv
 from passlib.context import CryptContext
 
-# Add app directory to Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'app')))
-
-from database import SessionLocal
-from models.user import User, Role  # Import the Role enum
+from app.database import SessionLocal
+from app.models.user import User, Role
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
