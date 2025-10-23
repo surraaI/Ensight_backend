@@ -31,3 +31,8 @@ def password_reset(
     current_user: User = Depends(get_current_user)
 ):
     return reset_password(db, current_user, reset_data.current_password, reset_data.new_password)
+
+@router.get("/me")
+async def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+

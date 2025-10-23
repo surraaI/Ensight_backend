@@ -160,6 +160,7 @@ async def create_article(
     current_user: User = Depends(require_role([Role.WRITER, Role.EDITOR, Role.ADMIN, Role.SUPERADMIN]))
 ):
     """Create new article with image upload to Cloudinary"""
+    print(current_user)
     try:
         # Upload image to Cloudinary
         upload_result = cloudinary.uploader.upload(image.file, folder="ensight_articles")
